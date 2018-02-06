@@ -1,10 +1,11 @@
-BOX_IMAGE = "centos7"
+BOX_IMAGE = "centos/7"
 SETUP_MASTER = true
 SETUP_NODES = true
 NODE_COUNT = 2
-MASTER_IP = "192.168.26.10"
-NODE_IP_NW = "192.168.26."
+MASTER_IP = "192.168.20.10"
+NODE_IP_NW = "192.168.20."
 POD_NW_CIDR = "10.244.0.0/16"
+SERVICE_CIDR = "10.245.0.0/16"
 
 #Generate new using steps in README
 KUBETOKEN = "b029ee.968a33e8d8e6bb0d"
@@ -19,13 +20,14 @@ MINIONSCRIPT
 $kubemasterscript = <<SCRIPT
 
 kubeadm reset
-kubeadm init --apiserver-advertise-address=#{MASTER_IP} --pod-network-cidr=#{POD_NW_CIDR} --token #{KUBETOKEN} --token-ttl 0
+kubeadm init --apiserver-advertise-address=#{MASTER_IP} --pod-network-cidr=#{POD_NW_CIDR} --service-cidr=#{SERVICE_CIDR} --token #{KUBETOKEN} --token-ttl 0
 
 mkdir -p $HOME/.kube
 sudo cp -Rf /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
-kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+#kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+kubectl apply -f https://raw.githubusercontent.com/cloudnativelabs/kube-router/master/daemonset/kubeadm-kuberouter-all-features.yaml
 
 SCRIPT
 
@@ -35,7 +37,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.provider "virtualbox" do |l|
     l.cpus = 1
-    l.memory = "1024"
+    l.memory = "2048"
   end
 
   config.vm.provision :shell, :path => "install-centos.sh"
